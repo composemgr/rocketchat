@@ -1,0 +1,58 @@
+# nginx proxy address - http://172.17.0.1:59071
+
+name: rocketchat
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  server:
+    image: registry.rocket.chat/rocketchat/rocket.chat:latest
+    container_name: rocketchat-server
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      PORT: 3000
+      ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      MONGO_URL: mongodb://rocketchat-db:27017/rocketchat?replicaSet=rs0
+      MONGO_OPLOG_URL: mongodb://rocketchat-db:27017/local?replicaSet=rs0
+    ports:
+      - 172.17.0.1:59071:3000
+    volumes:
+      - './rootfs/data/rocketchat/uploads:/app/uploads'
+    depends_on:
+      - db
+    networks:
+      - rocketchat
+
+  db:
+    image: docker.io/bitnami/mongodb:latest
+    container_name: rocketchat-db
+    hostname: rocketchat-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      MONGODB_PORT_NUMBER: 27017
+      ALLOW_EMPTY_PASSWORD: yes
+      MONGODB_ENABLE_JOURNAL: true
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_INITIAL_PRIMARY_PORT_NUMBER: 7017
+      MONGODB_ADVERTISED_HOSTNAME: rocketchat-db
+      MONGODB_INITIAL_PRIMARY_HOST: rocketchat-db
+    volumes:
+      - './rootfs/db/mongodb/rocketchat:/bitnami/mongodb'
+    networks:
+      - rocketchat
+
+networks:
+  rocketchat:
+    name: rocketchat
+    external: false
