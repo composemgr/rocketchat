@@ -48,7 +48,7 @@ services:
       MONGODB_ADVERTISED_HOSTNAME: rocketchat-db
       MONGODB_INITIAL_PRIMARY_HOST: rocketchat-db
     volumes:
-      - './rootfs/db/mongodb/rocketchat:/bitnami/mongodb'
+      - './rootfs/data/db/mongodb/rocketchat:/bitnami/mongodb'
     networks:
       - rocketchat
 
