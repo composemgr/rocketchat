@@ -24,7 +24,7 @@ services:
     ports:
       - 172.17.0.1:59071:3000
     volumes:
-      - './rootfs/data/rocketchat/uploads:/app/uploads'
+      - './volumes/data/rocketchat/uploads:/app/uploads'
     depends_on:
       - db
     networks:
@@ -48,7 +48,7 @@ services:
       MONGODB_ADVERTISED_HOSTNAME: rocketchat-db
       MONGODB_INITIAL_PRIMARY_HOST: rocketchat-db
     volumes:
-      - './rootfs/data/db/mongodb/rocketchat:/bitnami/mongodb'
+      - './volumes/data/db/mongodb/rocketchat:/bitnami/mongodb'
     networks:
       - rocketchat
 
