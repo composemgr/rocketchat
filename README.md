@@ -50,8 +50,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/data/rocketchat/uploads` - Data storage
-- `./rootfs/data/db/mongodb/rocketchat` - Data storage
+- `./volumes/data/rocketchat/uploads` - Data storage
+- `./volumes/data/db/mongodb/rocketchat` - Data storage
 
 ## 🔐 Security
 
