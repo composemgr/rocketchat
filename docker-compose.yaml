@@ -18,7 +18,7 @@ services:
     environment:
       TZ: ${TZ:-America/New_York}
       PORT: 3000
-      ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}.${BASE_DOMAIN_NAME:-example.com}
       MONGO_URL: mongodb://rocketchat-db:27017/rocketchat?replicaSet=rs0
       MONGO_OPLOG_URL: mongodb://rocketchat-db:27017/local?replicaSet=rs0
     ports:
@@ -56,3 +56,4 @@ networks:
   rocketchat:
     name: rocketchat
     external: false
+
