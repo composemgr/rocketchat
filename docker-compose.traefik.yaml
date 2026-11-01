@@ -1,0 +1,77 @@
+
+name: rocketchat
+x-logging: &default-logging
+  options:
+    max-size: '5m'
+    max-file: '1'
+  driver: json-file
+
+services:
+  server:
+    image: registry.rocket.chat/rocketchat/rocket.chat:latest
+    container_name: rocketchat-server
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: rocketchat-server
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
+      # Rocket.Chat web server
+      PORT: '3000'
+      ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
+      # MongoDB replica set connections
+      MONGO_URL: mongodb://rocketchat-db:27017/rocketchat?replicaSet=rs0
+      MONGO_OPLOG_URL: mongodb://rocketchat-db:27017/local?replicaSet=rs0
+    volumes:
+      - './volumes/data/rocketchat/uploads:/app/uploads:z'
+    depends_on:
+      - db
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.rocketchat-server.entrypoints=http'
+      - 'traefik.http.routers.rocketchat-server.rule=Host(${BASE_HOST_NAME:-$HOSTNAME})'
+      - 'traefik.http.routers.rocketchat-server.middlewares=rocketchat-server-https-redirect'
+      - 'traefik.http.middlewares.rocketchat-server-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.rocketchat-server-secure.entrypoints=https'
+      - 'traefik.http.routers.rocketchat-server-secure.rule=Host(${BASE_HOST_NAME:-$HOSTNAME})'
+      - 'traefik.http.routers.rocketchat-server-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.rocketchat-server-secure.service=rocketchat-server'
+      - 'traefik.http.services.rocketchat-server.loadbalancer.server.port=3000'
+    networks:
+      - rocketchat
+      - traefik
+
+  db:
+    image: docker.io/bitnami/mongodb:latest
+    container_name: rocketchat-db
+    domainname: ${BASE_DOMAIN_NAME:-example.com}
+    hostname: rocketchat-db
+    restart: always
+    pull_policy: always
+    logging: *default-logging
+    environment:
+      TZ: ${TZ:-America/New_York}
+      CONTAINER_NAME: rocketchat-db
+      # MongoDB replica set configuration
+      MONGODB_PORT_NUMBER: '27017'
+      MONGODB_ENABLE_JOURNAL: "true"
+      MONGODB_REPLICA_SET_NAME: rs0
+      MONGODB_REPLICA_SET_MODE: primary
+      MONGODB_INITIAL_PRIMARY_PORT_NUMBER: '27017'
+      MONGODB_ADVERTISED_HOSTNAME: rocketchat-db
+      MONGODB_INITIAL_PRIMARY_HOST: rocketchat-db
+    volumes:
+      - './volumes/data/db/mongodb/rocketchat:/bitnami/mongodb:z'
+    networks:
+      - rocketchat
+
+networks:
+  rocketchat:
+    name: rocketchat
+    external: false
+  traefik:
+    external: true
