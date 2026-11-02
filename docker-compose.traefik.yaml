@@ -24,7 +24,6 @@ services:
       ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
       # MongoDB replica set connections
       MONGO_URL: mongodb://rocketchat-db:27017/rocketchat?replicaSet=rs0
-      MONGO_OPLOG_URL: mongodb://rocketchat-db:27017/local?replicaSet=rs0
     volumes:
       - './volumes/data/rocketchat/uploads:/app/uploads:z'
     depends_on:
@@ -46,7 +45,7 @@ services:
       - traefik
 
   db:
-    image: docker.io/bitnami/mongodb:latest
+    image: mongo:latest
     container_name: rocketchat-db
     domainname: ${BASE_DOMAIN_NAME:-example.com}
     hostname: rocketchat-db
@@ -56,16 +55,15 @@ services:
     environment:
       TZ: ${TZ:-America/New_York}
       CONTAINER_NAME: rocketchat-db
-      # MongoDB replica set configuration
-      MONGODB_PORT_NUMBER: '27017'
-      MONGODB_ENABLE_JOURNAL: "true"
-      MONGODB_REPLICA_SET_NAME: rs0
-      MONGODB_REPLICA_SET_MODE: primary
-      MONGODB_INITIAL_PRIMARY_PORT_NUMBER: '27017'
-      MONGODB_ADVERTISED_HOSTNAME: rocketchat-db
-      MONGODB_INITIAL_PRIMARY_HOST: rocketchat-db
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', 'try { rs.status() } catch (e) { rs.initiate({_id: "rs0", members: [{_id: 0, host: "rocketchat-db:27017"}]}) }; quit(db.hello().isWritablePrimary ? 0 : 1)']
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
     volumes:
-      - './volumes/data/db/mongodb/rocketchat:/bitnami/mongodb:z'
+      - './volumes/db/mongodb/rocketchat:/data/db:z'
     networks:
       - rocketchat
 

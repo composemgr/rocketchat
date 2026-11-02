@@ -12,7 +12,7 @@ Open source team communication and chat platform
 
 ### Infrastructure Components
 
-- **db**: docker.io/bitnami/mongodb:latest - MongoDB replica set
+- **db**: mongo:latest - MongoDB single-node replica set `rs0`, data in `./volumes/db/mongodb/rocketchat` (an existing Bitnami data directory is not compatible and must be dumped and restored)
 
 ## 📦 Installation
 
