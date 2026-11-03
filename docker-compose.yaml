@@ -25,6 +25,12 @@ services:
       ROOT_URL: https://${BASE_HOST_NAME:-$HOSTNAME}
       # MongoDB replica set connections
       MONGO_URL: mongodb://rocketchat-db:27017/rocketchat?replicaSet=rs0
+    healthcheck:
+      test: ['CMD', 'nc', '-z', '127.0.0.1', '3000']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     ports:
       - '172.17.0.1:64330:3000'
     volumes:
